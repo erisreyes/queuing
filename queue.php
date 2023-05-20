@@ -10,15 +10,15 @@ class Queue
         $this->conn = $conn;
     }
 
-    public function addToQueue($name)
+    public function addToQueue($employee_name, $unit_id, $emp_category, $transaction_area_id, $transaction_concern)
     {
-        $uniqueNumber = $this->generateUniqueNumber();
-        $status = 'waiting';
-        $sql = "INSERT INTO customers (name, unique_number, status) VALUES (?, ?, ?)";
+        $status = 'Pending';
+        $unique_number =  $this->generateUniqueNumber();
+        $sql = "INSERT INTO transaction (name, unit_id, emp_category_id, transaction_area_id, unique_number, status, concern) VALUES (?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->conn->prepare($sql);
-        $stmt->bind_param("sis", $name, $uniqueNumber, $status);
+        $stmt->bind_param("siiiiss", $employee_name, $unit_id, $emp_category, $transaction_area_id, $unique_number, $status, $transaction_concern);
         $stmt->execute();
-        return ['name' => $name, 'unique_number' => $uniqueNumber];
+        return ['employee_name' => $employee_name, 'unit_id' => $unit_id, 'emp_category' => $emp_category, 'transaction_area_id' => $transaction_area_id, 'unique_number' => $unique_number, 'status' => $status, 'concern' => $transaction_concern];
     }
 
     public function generateUniqueNumber()
@@ -26,20 +26,20 @@ class Queue
         return rand(1000, 9999);
     }
 
-    public function getNextCustomer()
+    public function getNexttransaction()
     {
-        $sql = "UPDATE customers SET status='served' WHERE id=(SELECT id FROM customers WHERE status='waiting' ORDER BY id LIMIT 1)";
+        $sql = "UPDATE transaction SET status='served' WHERE id=(SELECT id FROM transaction WHERE status='waiting' ORDER BY id LIMIT 1)";
         $this->conn->query($sql);
     }
 
-    public function getActiveCustomers()
+    public function getActiveTransactions()
     {
-        $sql = "SELECT name, unique_number, status FROM customers WHERE status='waiting'";
+        $sql = "SELECT name, unique_number, status FROM transaction WHERE status='Serving'";
         $result = $this->conn->query($sql);
-        $customers = [];
+        $transactions = [];
         while ($row = $result->fetch_assoc()) {
-            $customers[] = $row;
+            $transactions[] = $row;
         }
-        return $customers;
+        return $transactions;
     }
 }
